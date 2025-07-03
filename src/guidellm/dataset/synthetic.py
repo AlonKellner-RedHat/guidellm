@@ -4,6 +4,8 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import Any, Literal, Optional, Union
 
+import random
+import time
 import yaml
 from datasets import (
     Dataset,
@@ -183,7 +185,6 @@ class SyntheticTextItemsGenerator(
     def _create_prompt(self, prompt_tokens: int, start_index: int, request_id: int) -> str:
         """
         Create a prompt with unique prefix to prevent vLLM prefix caching.
-
         Args:
             prompt_tokens: Target number of tokens for the prompt
             start_index: Starting position in the text corpus
@@ -192,10 +193,9 @@ class SyntheticTextItemsGenerator(
             Generated prompt string with unique prefix
         """
         if prompt_tokens <= 0:
-            return f"{request_id}: "
+            return self._create_unique_prefix(request_id)
 
-        # Create unique prefix that will prevent any prefix caching
-        unique_prefix = f"{request_id}: "
+        unique_prefix = self._create_unique_prefix(request_id)
 
         # Calculate how many tokens the prefix uses
         prefix_tokens = len(self.processor.tokenize(unique_prefix))
@@ -221,6 +221,21 @@ class SyntheticTextItemsGenerator(
 
         base_text = self.text_creator.create_text(start_index, left - start_index)
         return unique_prefix + base_text
+
+    def _create_unique_prefix(self, request_id: int) -> str:
+        """
+        Create a unique prefix that will never match any other request.
+        """
+
+        timestamp = int(time.time() * 1000000)  # microseconds
+        random.seed(request_id + timestamp)
+        random_component = random.randint(100000, 999999)
+
+        prefix_parts = [
+            f"RAND{random_component}",
+        ]
+
+        return f"{'_'.join(prefix_parts)}: "
 
 
 class SyntheticDatasetCreator(DatasetCreator):
