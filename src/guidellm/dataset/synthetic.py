@@ -227,12 +227,13 @@ class SyntheticTextItemsGenerator(
         Create a unique prefix that will never match any other request.
         """
 
-        timestamp = int(time.time() * 1000000)  # microseconds
+        # microseconds
+        timestamp = int(time.time() * 1000000)
         random.seed(request_id + timestamp)
         random_component = random.randint(100000, 999999)
 
         prefix_parts = [
-            f"RAND{random_component}",
+            f"{random_component}",
         ]
 
         return f"{'_'.join(prefix_parts)}: "
