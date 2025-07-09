@@ -23,10 +23,7 @@ class TestSyntheticDatasetConfig:
 
     def test_config_creation_with_defaults(self):
         """Test creating config with default values."""
-        config = SyntheticDatasetConfig(
-            prompt_tokens=50,
-            output_tokens=20
-        )
+        config = SyntheticDatasetConfig(prompt_tokens=50, output_tokens=20)
 
         assert config.prompt_tokens == 50
         assert config.output_tokens == 20
@@ -48,7 +45,7 @@ class TestSyntheticDatasetConfig:
             output_tokens_min=20,
             output_tokens_max=40,
             samples=500,
-            source="custom_text.txt"
+            source="custom_text.txt",
         )
 
         assert config.prompt_tokens == 100
@@ -63,12 +60,14 @@ class TestSyntheticDatasetConfig:
         assert config.source == "custom_text.txt"
 
     def test_parse_json_string(self):
-        json_str = json.dumps({
-            "prompt_tokens": 75,
-            "output_tokens": 25,
-            "samples": 200,
-            "source": "test.txt"
-        })
+        json_str = json.dumps(
+            {
+                "prompt_tokens": 75,
+                "output_tokens": 25,
+                "samples": 200,
+                "source": "test.txt",
+            }
+        )
 
         config = SyntheticDatasetConfig.parse_str(json_str)
 
@@ -88,12 +87,11 @@ class TestSyntheticDatasetConfig:
         assert config.source == "data.txt"
 
     def test_parse_yaml_file(self):
-
         config_data = {
             "prompt_tokens": 60,
             "output_tokens": 15,
             "samples": 100,
-            "source": "yaml_test.txt"
+            "source": "yaml_test.txt",
         }
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
@@ -111,11 +109,7 @@ class TestSyntheticDatasetConfig:
             Path(yaml_path).unlink()
 
     def test_parse_config_file(self):
-        config_data = {
-            "prompt_tokens": 90,
-            "output_tokens": 35,
-            "samples": 150
-        }
+        config_data = {"prompt_tokens": 90, "output_tokens": 35, "samples": 150}
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".config", delete=False) as f:
             yaml.dump(config_data, f)
@@ -147,7 +141,6 @@ class TestSyntheticDatasetConfig:
 
 
 class TestSyntheticTextItemsGenerator:
-
     @pytest.fixture
     def tokenizer(self):
         """Fixture to provide a tokenizer for testing."""
@@ -158,7 +151,6 @@ class TestSyntheticTextItemsGenerator:
 
     @pytest.fixture
     def simple_config(self):
-
         return SyntheticDatasetConfig(
             prompt_tokens=15,
             output_tokens=10,
@@ -166,12 +158,11 @@ class TestSyntheticTextItemsGenerator:
             source=(
                 "The quick brown fox jumps over the lazy dog. Machine learning models "
                 "require diverse training data."
-            )
+            ),
         )
 
     @pytest.fixture
     def complex_config(self):
-
         return SyntheticDatasetConfig(
             prompt_tokens=20,
             prompt_tokens_stdev=5,
@@ -185,13 +176,13 @@ class TestSyntheticTextItemsGenerator:
             source=(
                 "The quick brown fox jumps over the lazy dog. Machine learning models "
                 "require diverse training data."
-            )
+            ),
         )
 
     def test_generator_initialization(self, simple_config, tokenizer):
-
         generator = SyntheticTextItemsGenerator(
-            simple_config, tokenizer, random_seed=42)
+            simple_config, tokenizer, random_seed=42
+        )
 
         assert generator.config == simple_config
         assert generator.processor == tokenizer
@@ -201,7 +192,8 @@ class TestSyntheticTextItemsGenerator:
 
     def test_basic_prompt_generation(self, simple_config, tokenizer):
         generator = SyntheticTextItemsGenerator(
-            simple_config, tokenizer, random_seed=42)
+            simple_config, tokenizer, random_seed=42
+        )
 
         items = list(generator)
 
@@ -224,10 +216,11 @@ class TestSyntheticTextItemsGenerator:
 
     def test_unique_prefix_generation(self, simple_config, tokenizer):
         generator = SyntheticTextItemsGenerator(
-            simple_config, tokenizer, random_seed=42)
+            simple_config, tokenizer, random_seed=42
+        )
 
         items = list(generator)
-        prompts = [item["prompt"] for item in items]
+        prompts = [str(item["prompt"]) for item in items]
 
         # Verify each prompt starts with a unique request ID
         for i, prompt in enumerate(prompts, 1):
@@ -241,10 +234,11 @@ class TestSyntheticTextItemsGenerator:
     def test_prefix_caching_prevention(self, simple_config, tokenizer):
         """Test that prefix caching is effectively prevented."""
         generator = SyntheticTextItemsGenerator(
-            simple_config, tokenizer, random_seed=42)
+            simple_config, tokenizer, random_seed=42
+        )
 
         items = list(generator)
-        prompts = [item["prompt"] for item in items]
+        prompts = [str(item["prompt"]) for item in items]
 
         # Test that no prompt is a prefix of another
         for i, prompt1 in enumerate(prompts):
@@ -265,26 +259,29 @@ class TestSyntheticTextItemsGenerator:
 
     def test_token_count_accuracy(self, simple_config, tokenizer):
         generator = SyntheticTextItemsGenerator(
-            simple_config, tokenizer, random_seed=42)
+            simple_config, tokenizer, random_seed=42
+        )
 
         items = list(generator)
 
         for item in items:
-            actual_tokens = len(tokenizer.tokenize(item["prompt"]))
-            target_tokens = item["prompt_tokens_count"]
+            actual_tokens = len(tokenizer.tokenize(str(item["prompt"])))
+            target_tokens = int(item["prompt_tokens_count"])
 
             # Allow small variance due to tokenization differences
             assert abs(actual_tokens - target_tokens) <= 2, (
                 f"Token count mismatch: expected ~{target_tokens}, got {actual_tokens}"
             )
+
     def test_variance_in_token_counts(self, complex_config, tokenizer):
         generator = SyntheticTextItemsGenerator(
-            complex_config, tokenizer, random_seed=42)
+            complex_config, tokenizer, random_seed=42
+        )
 
         items = list(generator)
 
-        prompt_token_counts = [item["prompt_tokens_count"] for item in items]
-        output_token_counts = [item["output_tokens_count"] for item in items]
+        prompt_token_counts = [int(item["prompt_tokens_count"]) for item in items]
+        output_token_counts = [int(item["output_tokens_count"]) for item in items]
 
         # With variance, we should see different token counts
         assert len(set(prompt_token_counts)) > 1, (
@@ -297,20 +294,24 @@ class TestSyntheticTextItemsGenerator:
         # Verify bounds are respected
         assert all(
             complex_config.prompt_tokens_min
-            <= count <= complex_config.prompt_tokens_max
+            <= count
+            <= complex_config.prompt_tokens_max
             for count in prompt_token_counts
         ), "Prompt tokens should be within bounds"
         assert all(
             complex_config.output_tokens_min
-            <= count <= complex_config.output_tokens_max
+            <= count
+            <= complex_config.output_tokens_max
             for count in output_token_counts
         ), "Output tokens should be within bounds"
 
     def test_reproducibility_with_same_seed(self, simple_config, tokenizer):
         generator1 = SyntheticTextItemsGenerator(
-            simple_config, tokenizer, random_seed=42)
+            simple_config, tokenizer, random_seed=42
+        )
         generator2 = SyntheticTextItemsGenerator(
-            simple_config, tokenizer, random_seed=42)
+            simple_config, tokenizer, random_seed=42
+        )
 
         items1 = list(generator1)
         items2 = list(generator2)
@@ -318,23 +319,29 @@ class TestSyntheticTextItemsGenerator:
         # Results should be identical with same seed
         assert len(items1) == len(items2)
         for item1, item2 in zip(items1, items2):
-            assert item1["prompt"] == item2["prompt"]
-            assert item1["prompt_tokens_count"] == item2["prompt_tokens_count"]
-            assert item1["output_tokens_count"] == item2["output_tokens_count"]
+            assert str(item1["prompt"]) == str(item2["prompt"])
+            assert int(item1["prompt_tokens_count"]) == int(
+                item2["prompt_tokens_count"]
+            )
+            assert int(item1["output_tokens_count"]) == int(
+                item2["output_tokens_count"]
+            )
 
     def test_different_seeds_produce_different_results(self, simple_config, tokenizer):
         """Test that different seeds produce different results."""
         generator1 = SyntheticTextItemsGenerator(
-            simple_config, tokenizer, random_seed=42)
+            simple_config, tokenizer, random_seed=42
+        )
         generator2 = SyntheticTextItemsGenerator(
-            simple_config, tokenizer, random_seed=123)
+            simple_config, tokenizer, random_seed=123
+        )
 
         items1 = list(generator1)
         items2 = list(generator2)
 
         # Results should be different with different seeds
-        prompts1 = [item["prompt"] for item in items1]
-        prompts2 = [item["prompt"] for item in items2]
+        prompts1 = [str(item["prompt"]) for item in items1]
+        prompts2 = [str(item["prompt"]) for item in items2]
 
         different_content = False
         for p1, p2 in zip(prompts1, prompts2):
@@ -347,10 +354,10 @@ class TestSyntheticTextItemsGenerator:
 
         assert different_content, "Different seeds should produce different content"
 
-    def test_create_prompt_method_directly(
-            self, simple_config, tokenizer):
+    def test_create_prompt_method_directly(self, simple_config, tokenizer):
         generator = SyntheticTextItemsGenerator(
-            simple_config, tokenizer, random_seed=42)
+            simple_config, tokenizer, random_seed=42
+        )
 
         # Test normal prompt creation
         prompt = generator._create_prompt(10, 0, 5)
@@ -358,18 +365,17 @@ class TestSyntheticTextItemsGenerator:
 
         actual_tokens = len(tokenizer.tokenize(prompt))
         assert abs(actual_tokens - 10) <= 1, (
-        "Token count should be approximately correct"
+            "Token count should be approximately correct"
         )
 
         # Test empty prompt
         empty_prompt = generator._create_prompt(0, 0, 3)
         assert empty_prompt == "3: ", "Empty prompt should just be the prefix"
 
-    def test_request_counter_increments_correctly(
-            self, simple_config, tokenizer):
-
+    def test_request_counter_increments_correctly(self, simple_config, tokenizer):
         generator = SyntheticTextItemsGenerator(
-            simple_config, tokenizer, random_seed=42)
+            simple_config, tokenizer, random_seed=42
+        )
 
         # Initially should be 0
         assert generator.request_counter == 0
@@ -385,16 +391,17 @@ class TestSyntheticTextItemsGenerator:
 
         # Verify prompts have correct prefixes
         for i, item in enumerate(items, 1):
-            assert item["prompt"].startswith(f"{i}: ")
+            assert str(item["prompt"]).startswith(f"{i}: ")
 
     def test_prefix_format_consistency(self, simple_config, tokenizer):
         generator = SyntheticTextItemsGenerator(
-            simple_config, tokenizer, random_seed=42)
+            simple_config, tokenizer, random_seed=42
+        )
 
         items = list(generator)
 
         for i, item in enumerate(items, 1):
-            prompt = item["prompt"]
+            prompt = str(item["prompt"])
 
             # Should start with number followed by colon and space
             assert prompt.startswith(f"{i}: "), f"Prompt should start with '{i}: '"
@@ -405,15 +412,15 @@ class TestSyntheticTextItemsGenerator:
             assert parts[0] == str(i), f"First part should be request ID {i}"
 
             # Content part should not be empty (unless it's a zero-token prompt)
-            if item["prompt_tokens_count"] > 0:
+            if int(item["prompt_tokens_count"]) > 0:
                 assert len(parts[1]) > 0, (
                     "Content part should not be empty for non-zero token prompts"
                 )
 
     def test_binary_search_token_accuracy(self, simple_config, tokenizer):
-
         generator = SyntheticTextItemsGenerator(
-            simple_config, tokenizer, random_seed=42)
+            simple_config, tokenizer, random_seed=42
+        )
 
         # Test various token counts
         test_cases = [5, 10, 15, 20, 25]
@@ -429,61 +436,55 @@ class TestSyntheticTextItemsGenerator:
                 f"Prompt: '{prompt[:50]}...'"
             )
 
-    def test_vllm_cache_simulation_comprehensive(
-            self, simple_config, tokenizer):
-
+    def test_vllm_cache_simulation_comprehensive(self, simple_config, tokenizer):
         # Use larger sample for more thorough testing
         config = SyntheticDatasetConfig(
-            prompt_tokens=20,
-            output_tokens=10,
-            samples=20,
-            source=simple_config.source
+            prompt_tokens=20, output_tokens=10, samples=20, source=simple_config.source
         )
 
-        generator = SyntheticTextItemsGenerator(
-            config, tokenizer, random_seed=42)
+        generator = SyntheticTextItemsGenerator(config, tokenizer, random_seed=42)
         items = list(generator)
-        prompts = [item["prompt"] for item in items]
+        prompts = [str(item["prompt"]) for item in items]
 
         # Simulate vLLM cache with different granularities
         cache_scenarios = [
-            {"name": "Character-level", "granularity": 1},
-            {"name": "Token-level", "granularity": 4},
-            {"name": "Word-level", "granularity": 10},
+            ("Character-level", 1),
+            ("Token-level", 4),
+            ("Word-level", 10),
         ]
 
-        for scenario in cache_scenarios:
+        for scenario_name, granularity in cache_scenarios:
             cache_hits = 0
             total_comparisons = 0
 
             for i, prompt1 in enumerate(prompts):
-                for _, prompt2 in enumerate(prompts[i+1:], i+1):
+                for _, prompt2 in enumerate(prompts[i + 1 :], i + 1):
                     total_comparisons += 1
 
                     # Check for common prefix at specified granularity
                     min_len = min(len(prompt1), len(prompt2))
                     common_prefix_len = 0
 
-                    for k in range(0, min_len, scenario["granularity"]):
-                        chunk1 = prompt1[k:k+scenario["granularity"]]
-                        chunk2 = prompt2[k:k+scenario["granularity"]]
+                    for k in range(0, min_len, granularity):
+                        chunk1 = prompt1[k : k + granularity]
+                        chunk2 = prompt2[k : k + granularity]
                         if chunk1 == chunk2:
                             common_prefix_len += len(chunk1)
                         else:
                             break
 
                     # If meaningful common prefix exists, it's a cache hit
-                    if common_prefix_len > scenario["granularity"]:
+                    if common_prefix_len > granularity:
                         cache_hits += 1
 
-            cache_hit_rate = (cache_hits / total_comparisons
-                              ) * 100 if total_comparisons > 0 else 0
+            cache_hit_rate = (
+                (cache_hits / total_comparisons) * 100 if total_comparisons > 0 else 0
+            )
 
             # All scenarios should have 0% cache hit rate
-            assert cache_hit_rate == 0.0, \
-            (
-                f"{scenario['name']} caching: \
-                    Expected 0% hit rate, got {cache_hit_rate:.1f}%"
+            assert cache_hit_rate == 0.0, (
+                f"{scenario_name} caching: Expected 0% hit rate, "
+                f"got {cache_hit_rate:.1f}%"
             )
 
     def test_edge_case_very_short_prompts(self, tokenizer):
@@ -491,7 +492,7 @@ class TestSyntheticTextItemsGenerator:
             prompt_tokens=1,
             output_tokens=5,
             samples=5,
-            source="A B C D E F G H I J K L M N O P Q R S T U V W X Y Z"
+            source="A B C D E F G H I J K L M N O P Q R S T U V W X Y Z",
         )
 
         generator = SyntheticTextItemsGenerator(config, tokenizer, random_seed=42)
@@ -499,27 +500,24 @@ class TestSyntheticTextItemsGenerator:
 
         for i, item in enumerate(items, 1):
             # Even very short prompts should have unique prefixes
-            assert item["prompt"].startswith(f"{i}: ")
+            assert str(item["prompt"]).startswith(f"{i}: ")
 
             # Should have at least the prefix
-            assert len(item["prompt"]) >= len(f"{i}: ")
-
+            assert len(str(item["prompt"])) >= len(f"{i}: ")
 
     def test_create_prompt_method_signature_and_documentation(
-            self, simple_config, tokenizer):
+        self, simple_config, tokenizer
+    ):
         generator = SyntheticTextItemsGenerator(
-            simple_config, tokenizer, random_seed=42)
+            simple_config, tokenizer, random_seed=42
+        )
 
         # Test method exists and is callable
         assert hasattr(generator, "_create_prompt")
         assert callable(generator._create_prompt)
 
         # Test method signature by calling with expected parameters
-        prompt = generator._create_prompt(
-            prompt_tokens=10,
-            start_index=0,
-            request_id=1
-        )
+        prompt = generator._create_prompt(prompt_tokens=10, start_index=0, request_id=1)
 
         # Should return a string
         assert isinstance(prompt, str)
@@ -557,7 +555,7 @@ class TestIntegration:
                 "The quick brown fox jumps over the lazy dog. Machine learning models "
                 "require diverse training data to perform well across different tasks "
                 "and domains."
-            )
+            ),
         }
 
         config_str = json.dumps(config_dict)
@@ -568,7 +566,7 @@ class TestIntegration:
             data_args=None,
             processor=tokenizer,
             processor_args=None,
-            random_seed=42
+            random_seed=42,
         )
 
         # Verify dataset properties
@@ -606,13 +604,12 @@ class TestIntegration:
                 "require diverse training data to perform well across different tasks "
                 "and domains. Natural language processing has advanced significantly "
                 "in recent years."
-            )
+            ),
         )
 
         generator = SyntheticTextItemsGenerator(config, tokenizer, random_seed=42)
         items = list(generator)
-        prompts = [item["prompt"] for item in items]
-
+        prompts = [str(item["prompt"]) for item in items]
 
         prefixes = [prompt.split(": ", 1)[0] for prompt in prompts]
         assert len(set(prefixes)) == len(prefixes), "All prefixes should be unique"

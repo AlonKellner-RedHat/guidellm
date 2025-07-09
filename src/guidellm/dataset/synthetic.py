@@ -4,8 +4,6 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import Any, Literal, Optional, Union
 
-import random
-import time
 import yaml
 from datasets import (
     Dataset,
@@ -177,12 +175,16 @@ class SyntheticTextItemsGenerator(
             # Increment counter for each request
             self.request_counter += 1
             yield {
-                "prompt": self._create_prompt(prompt_tokens, start_index, self.request_counter),
+                "prompt": self._create_prompt(
+                    prompt_tokens, start_index, self.request_counter
+                ),
                 "prompt_tokens_count": prompt_tokens,
                 "output_tokens_count": output_tokens,
             }
 
-    def _create_prompt(self, prompt_tokens: int, start_index: int, request_id: int) -> str:
+    def _create_prompt(
+        self, prompt_tokens: int, start_index: int, request_id: int
+    ) -> str:
         """
         Create a prompt with unique prefix to prevent vLLM prefix caching.
         Args:
