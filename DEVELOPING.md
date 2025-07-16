@@ -18,7 +18,7 @@ Before you begin, ensure you have the following installed:
 1. Clone the repository to your local machine:
 
    ```bash
-   git clone https://github.com/neuralmagic/guidellm.git
+   git clone https://github.com/vllm-project/guidellm.git
    cd guidellm
    ```
 
@@ -267,9 +267,23 @@ Reference [https://www.npmjs.com/package/jest-runner-groups](jest-runner-groups)
  */
 ```
 
+### Logging
+
+Logging is useful for learning how GuideLLM works and finding problems.
+
+Logging is set using the following environment variables:
+
+- `GUIDELLM__LOGGING__DISABLED`: Disable logging (default: false).
+- `GUIDELLM__LOGGING__CLEAR_LOGGERS`: Clear existing loggers from loguru (default: true).
+- `GUIDELLM__LOGGING__CONSOLE_LOG_LEVEL`: Log level for console logging (default: none, options: DEBUG, INFO, WARNING, ERROR, CRITICAL).
+- `GUIDELLM__LOGGING__LOG_FILE`: Path to the log file for file logging (default: guidellm.log if log file level set else none)
+- `GUIDELLM__LOGGING__LOG_FILE_LEVEL`: Log level for file logging (default: INFO if log file set else none).
+
+If logging isn't responding to the environment variables, run the `guidellm config` command to validate that the environment variables match and are being set correctly.
+
 ## Additional Resources
 
-- [CONTRIBUTING.md](https://github.com/neuralmagic/guidellm/blob/main/CONTRIBUTING.md): Guidelines for contributing to the project.
-- [CODE_OF_CONDUCT.md](https://github.com/neuralmagic/guidellm/blob/main/CODE_OF_CONDUCT.md): Our expectations for community behavior.
-- [tox.ini](https://github.com/neuralmagic/guidellm/blob/main/tox.ini): Configuration for Tox environments.
-- [.pre-commit-config.yaml](https://github.com/neuralmagic/guidellm/blob/main/.pre-commit-config.yaml): Configuration for pre-commit hooks.
+- [CONTRIBUTING.md](https://github.com/vllm-project/guidellm/blob/main/CONTRIBUTING.md): Guidelines for contributing to the project.
+- [CODE_OF_CONDUCT.md](https://github.com/vllm-project/guidellm/blob/main/CODE_OF_CONDUCT.md): Our expectations for community behavior.
+- [tox.ini](https://github.com/vllm-project/guidellm/blob/main/tox.ini): Configuration for Tox environments.
+- [.pre-commit-config.yaml](https://github.com/vllm-project/guidellm/blob/main/.pre-commit-config.yaml): Configuration for pre-commit hooks.
