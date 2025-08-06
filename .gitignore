@@ -207,6 +207,7 @@ build/
 
 # misc
 *.pem
+bin/
 
 # debug
 npm-debug.log*
