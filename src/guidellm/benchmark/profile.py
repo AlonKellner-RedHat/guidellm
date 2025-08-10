@@ -615,6 +615,14 @@ class SweepProfile(Profile[StrategyT, BenchmarkT]):
                 )
             )[1:]  # don't rerun synchronous
 
+        if (prev_strategy.type_ == "constant") and (
+            prev_benchmark.scheduler.state.end_processing_constraints[
+                "stop_over_saturated"
+            ]["is_over_saturated"]
+            is not None
+        ):
+            return None
+
         if len(self.completed_strategies) >= self.sweep_size:
             return None
 
