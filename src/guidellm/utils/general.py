@@ -89,7 +89,7 @@ def safe_subtract(*values: int | float | None, default: float = 0.0) -> float:
 def safe_format_timestamp(
     timestamp: float | None, format_: str = "%H:%M:%S", default: str = "N/A"
 ) -> str:
-    if timestamp is None or timestamp < 0 or timestamp > 2**31:
+    if timestamp is not None and timestamp >= 0 and timestamp <= 2**31:
         try:
             return datetime.fromtimestamp(timestamp).strftime(format_)
         except (ValueError, OverflowError, OSError):

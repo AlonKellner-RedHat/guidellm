@@ -20,7 +20,6 @@ import asyncio
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterable, AsyncIterator, Iterable
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any, Generic, Literal
 
 from rich.console import Group
@@ -46,6 +45,7 @@ from guidellm.scheduler import (
     StrategyType,
 )
 from guidellm.utils import Colors, format_value_display
+from guidellm.utils.general import safe_format_timestamp
 
 __all__ = [
     "BenchmarkerProgress",
@@ -624,7 +624,7 @@ class _GenerativeProgressTaskState:
         if self.start_time < 0.0:
             return "--:--:--"
 
-        return datetime.fromtimestamp(self.start_time).strftime("%H:%M:%S")
+        return safe_format_timestamp(self.start_time, format_="%H:%M:%S")
 
     @property
     def formatted_progress_status(self) -> str:

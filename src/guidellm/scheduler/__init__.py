@@ -1,3 +1,8 @@
+from .advanced_constraints import (
+    OverSaturationConstraint,
+    OverSaturationConstraintInitializer,
+    OverSaturationDetector,
+)
 from .constraints import (
     Constraint,
     ConstraintInitializer,
@@ -67,6 +72,9 @@ __all__ = [
     "MultiTurnRequestT",
     "NoDelayRequestTimings",
     "NonDistributedEnvironment",
+    "OverSaturationConstraint",
+    "OverSaturationConstraintInitializer",
+    "OverSaturationDetector",
     "PoissonRateRequestTimings",
     "PydanticConstraintInitializer",
     "RequestSchedulerTimings",

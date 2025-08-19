@@ -114,6 +114,7 @@ async def benchmark_generative_text(  # noqa: C901
     max_errors: int | None = None,
     max_error_rate: float | None = None,
     max_global_error_rate: float | None = None,
+    stop_over_saturated: bool | None = None,
     **constraints: dict[str, ConstraintInitializer | Any],
 ) -> tuple[GenerativeBenchmarksReport, dict[str, Any]]:
     console = Console(quiet=not print_updates)
@@ -197,6 +198,7 @@ async def benchmark_generative_text(  # noqa: C901
             "max_errors": max_errors,
             "max_error_rate": max_error_rate,
             "max_global_error_rate": max_global_error_rate,
+            "stop_over_saturated": stop_over_saturated,
         }.items():
             if val is not None:
                 constraints[key] = val

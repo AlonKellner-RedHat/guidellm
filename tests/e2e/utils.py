@@ -45,9 +45,11 @@ class GuidellmClient:
         max_seconds: Optional[int] = None,
         max_requests: Optional[int] = None,
         max_error_rate: Optional[float] = None,
+        stop_over_saturated: Optional[bool] = False,
         data: str = "prompt_tokens=256,output_tokens=128",
         processor: str = "gpt2",
         additional_args: str = "",
+        extra_env: dict[str, str] | None = None,
     ) -> None:
         """
         Start a guidellm benchmark command.
@@ -57,6 +59,7 @@ class GuidellmClient:
         :param max_seconds: Maximum duration in seconds
         :param max_requests: Maximum number of requests
         :param max_error_rate: Maximum error rate before stopping
+        :param stop_over_saturated: Whether to stop the benchmark if the model is over-saturated
         :param data: Data configuration string
         :param processor: Processor/tokenizer to use
         :param additional_args: Additional command line arguments
@@ -65,7 +68,9 @@ class GuidellmClient:
 
         # Build command components
         cmd_parts = [
-            f"GUIDELLM__MAX_CONCURRENCY=10 GUIDELLM__MAX_WORKER_PROCESSES=10 {guidellm_exe} benchmark",
+            *([f"{k}={v}" for k, v in extra_env.items()] if extra_env else []),
+            "HF_HOME=/tmp/huggingface_cache",
+            f"{guidellm_exe} benchmark",
             f'--target "{self.target}"',
             f"--rate-type {rate_type}",
             f"--rate {rate}",
@@ -79,6 +84,9 @@ class GuidellmClient:
 
         if max_error_rate is not None:
             cmd_parts.append(f"--max-error-rate {max_error_rate}")
+
+        if stop_over_saturated:
+            cmd_parts.append("--stop-over-saturated")
 
         cmd_parts.extend(
             [

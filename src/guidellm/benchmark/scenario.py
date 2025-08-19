@@ -100,6 +100,10 @@ class GenerativeTextScenario(Scenario):
     )
     max_seconds: PositiveFloat | None = None
     max_requests: PositiveInt | None = None
+    max_errors: NonNegativeInt | None = None
+    max_error_rate: Annotated[float | None, Field(ge=0, le=1)] = None
+    max_global_error_rate: Annotated[float | None, Field(ge=0, le=1)] = None
+    stop_over_saturated: bool | None = None
     warmup_percent: Annotated[float | None, Field(gt=0, le=1)] = None
     cooldown_percent: Annotated[float | None, Field(gt=0, le=1)] = None
     output_sampling: NonNegativeInt | None = None
