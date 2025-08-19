@@ -24,7 +24,7 @@ def server():
     server = VllmSimServer(
         port=8000,
         model="databricks/dolly-v2-12b",
-        mode="echo",
+        mode="random",
         time_to_first_token=1,  # 1ms TTFT
         inter_token_latency=1,  # 1ms ITL
     )

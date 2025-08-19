@@ -265,9 +265,43 @@ def benchmark():
         "If None, will run until max_seconds or the data is exhausted."
     ),
 )
-@click.option("--max-errors", type=int, default=None, help="")
-@click.option("--max-error-rate", type=float, default=None, help="")
-@click.option("--max-global-error-rate", type=float, default=None, help="")
+@click.option(
+    "--max-errors",
+    type=int,
+    default=None,
+    help=(
+        "The maximum number of errors allowed before stopping the benchmark. "
+        "If None, will run until max_requests or the data is exhausted."
+    ),
+)
+@click.option(
+    "--max-error-rate",
+    type=float,
+    default=GenerativeTextScenario.get_default("max_error_rate"),
+    help=(
+        "The maximum error rate allowed before stopping the benchmark. "
+        "Should be a value between 0 and 1. Defaults to None."
+    ),
+)
+@click.option(
+    "--max-global-error-rate",
+    type=float,
+    default=GenerativeTextScenario.get_default("max_global_error_rate"),
+    help=(
+        "The maximum global error rate allowed before stopping the benchmark. "
+        "Should be a value between 0 and 1. Defaults to None."
+    ),
+)
+@click.option(
+    "--stop-over-saturated",
+    type=bool,
+    default=GenerativeTextScenario.get_default("stop_over_saturated"),
+    help=(
+        "Set this flag to stop the benchmark if the model is over-saturated. "
+        "Defaults to False."
+    ),
+    is_flag=True,
+)
 def run(
     target,
     data,
@@ -301,6 +335,7 @@ def run(
     max_errors,
     max_error_rate,
     max_global_error_rate,
+    stop_over_saturated,
 ):
     asyncio.run(
         benchmark_generative_text(
@@ -347,6 +382,7 @@ def run(
             max_errors=max_errors,
             max_error_rate=max_error_rate,
             max_global_error_rate=max_global_error_rate,
+            stop_over_saturated=stop_over_saturated,
         )
     )
 
