@@ -26,7 +26,7 @@ class VllmSimServer:
         inter_token_latency: Optional[float] = None,
         max_loras: Optional[int] = None,
         max_cpu_loras: Optional[int] = None,
-        max_running_requests: Optional[int] = None,
+        max_num_seqs: Optional[int] = None,
     ):
         self.port = port
         self.model = model
@@ -38,7 +38,7 @@ class VllmSimServer:
         self.inter_token_latency = inter_token_latency
         self.max_loras = max_loras
         self.max_cpu_loras = max_cpu_loras
-        self.max_running_requests = max_running_requests
+        self.max_num_seqs = max_num_seqs
         self.server_url = f"http://127.0.0.1:{self.port}"
         self.health_url = f"{self.server_url}/health"
         self.app_script = "./bin/llm-d-inference-sim"
@@ -70,10 +70,8 @@ class VllmSimServer:
             parameters.extend(["--max-loras", f"{self.max_loras}"])
         if self.max_cpu_loras is not None:
             parameters.extend(["--max-cpu-loras", f"{self.max_cpu_loras}"])
-        if self.max_running_requests is not None:
-            parameters.extend(
-                ["--max-running-requests", f"{self.max_running_requests}"]
-            )
+        if self.max_num_seqs is not None:
+            parameters.extend(["--max-num-seqs", f"{self.max_num_seqs}"])
         return parameters
 
     def start(self):

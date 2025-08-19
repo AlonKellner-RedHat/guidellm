@@ -95,6 +95,7 @@ async def benchmark_generative_text(
     max_errors: Optional[int],
     max_error_rate: Optional[float],
     max_global_error_rate: Optional[float],
+    stop_over_saturated: Optional[bool],
     warmup_percent: Optional[float],
     cooldown_percent: Optional[float],
     output_path: Optional[Union[str, Path]],
@@ -141,6 +142,7 @@ async def benchmark_generative_text(
                 "max_errors": max_errors,
                 "max_error_rate": max_error_rate,
                 "max_global_error_rate": max_global_error_rate,
+                "stop_over_saturated": stop_over_saturated,
             }.items()
             if val is not None
         },

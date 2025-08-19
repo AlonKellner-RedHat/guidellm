@@ -228,6 +228,16 @@ def benchmark():
     ),
 )
 @click.option(
+    "--stop-over-saturated",
+    type=bool,
+    default=GenerativeTextScenario.get_default("stop_over_saturated"),
+    help=(
+        "Set this flag to stop the benchmark if the model is over-saturated. "
+        "Defaults to False."
+    ),
+    is_flag=True,
+)
+@click.option(
     "--disable-progress",
     is_flag=True,
     help="Set this flag to disable progress updates to the console",
@@ -293,6 +303,7 @@ def run(
     max_errors,
     max_error_rate,
     max_global_error_rate,
+    stop_over_saturated,
     disable_progress,
     display_scheduler_stats,
     disable_console_outputs,
@@ -323,6 +334,7 @@ def run(
         max_errors=max_errors,
         max_error_rate=max_error_rate,
         max_global_error_rate=max_global_error_rate,
+        stop_over_saturated=stop_over_saturated,
         output_sampling=output_sampling,
         random_seed=random_seed,
     )

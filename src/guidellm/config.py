@@ -136,6 +136,10 @@ class Settings(BaseSettings):
     scheduler_start_delay_non_distributed: float = 0.1
     scheduler_poll_interval: float = 0.05
 
+    # Constraint settings
+    constraint_over_saturation_min_seconds: float = 30.0
+    constraint_over_saturation_max_window_seconds: float = 120.0
+
     # Data settings
     dataset: DatasetSettings = DatasetSettings()
 
