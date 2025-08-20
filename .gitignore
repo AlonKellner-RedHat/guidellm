@@ -230,3 +230,9 @@ src/ui/next-env.d.ts
 !src/ui/public/manifest.json
 !src/ui/serve.json
 .eslintcache
+
+# vLLM sim
+bin/
+
+# uv
+uv.lock
