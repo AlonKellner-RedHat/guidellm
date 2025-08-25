@@ -386,8 +386,6 @@ class OverSaturationConstraint(Constraint):  # type: ignore[misc]
                 "concurrent_slope_moe": concurrent_slope_moe,
                 "concurrent_n": concurrent_n,
                 "is_over_saturated": is_over_saturated,
-                "started_requests": self.over_saturation_detector.started_requests,
-                "finished_requests": self.over_saturation_detector.finished_requests,
             },
         )
 
