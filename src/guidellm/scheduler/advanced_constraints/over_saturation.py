@@ -5,7 +5,6 @@ from typing import Any, Literal, Optional, Union
 
 from pydantic import Field
 
-from guidellm.config import settings
 from guidellm.scheduler.constraints import (
     Constraint,
     ConstraintsInitializerFactory,
@@ -16,6 +15,7 @@ from guidellm.scheduler.objects import (
     SchedulerState,
     SchedulerUpdateAction,
 )
+from guidellm.settings import settings
 
 
 class OverSaturationDetectorBase(ABC):
