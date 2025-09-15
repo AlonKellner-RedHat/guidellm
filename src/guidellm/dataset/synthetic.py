@@ -22,6 +22,7 @@ __all__ = [
     "SyntheticDatasetConfig",
     "SyntheticDatasetCreator",
     "SyntheticTextItemsGenerator",
+    "SyntheticTextItemsGenerator2",
 ]
 
 
@@ -219,6 +220,127 @@ class SyntheticTextItemsGenerator(
         return start_tokens + self.processor.encode(final_text)
 
 
+class SyntheticTextItemsGenerator2(
+    Iterable[
+        dict[
+            Literal["prompt", "prompt_tokens_count", "output_tokens_count"],
+            Union[str, int],
+        ]
+    ]
+):
+    def __init__(
+        self,
+        config: SyntheticDatasetConfig,
+        processor: PreTrainedTokenizerBase,
+        random_seed: int,
+    ):
+        self.config = config
+        self.processor = processor
+        self.random_seed = random_seed
+        self.text_creator = EndlessTextCreator(
+            data=config.source,
+        )
+        self.initial_prompt_multiplier = 1
+        self.total_generations = 0
+        self.total_retries = 0
+
+    def __iter__(
+        self,
+    ) -> Iterator[
+        dict[
+            Literal["prompt", "prompt_tokens_count", "output_tokens_count"],
+            Union[str, int],
+        ]
+    ]:
+        self.total_retries = 0
+        self.total_generations = 0
+
+        prompt_tokens_sampler = IntegerRangeSampler(
+            average=self.config.prompt_tokens,
+            variance=self.config.prompt_tokens_stdev,
+            min_value=self.config.prompt_tokens_min,
+            max_value=self.config.prompt_tokens_max,
+            random_seed=self.random_seed,
+        )
+        output_tokens_sampler = IntegerRangeSampler(
+            average=self.config.output_tokens,
+            variance=self.config.output_tokens_stdev,
+            min_value=self.config.output_tokens_min,
+            max_value=self.config.output_tokens_max,
+            random_seed=self.random_seed + 1,  # ensure diff dist from prompts
+        )
+        # ensure diff distribution from output tokens
+        rand = random.Random(self.random_seed + 2)  # noqa: S311
+        unique_prefix_iter = cycle(self.processor.get_vocab().values())
+
+        prefix_index = rand.randint(0, len(self.text_creator.words))
+        prefix_tokens, retries = self._create_prompt(
+            self.config.prefix_tokens, prefix_index
+        )
+        self.total_retries += retries
+        self.total_generations += 1
+
+        for _, prompt_tokens, output_tokens in zip(
+            range(self.config.samples),
+            prompt_tokens_sampler,
+            output_tokens_sampler,
+        ):
+            start_index = rand.randint(0, len(self.text_creator.words))
+            prompt_token_ids, retries = self._create_prompt(
+                prompt_tokens, start_index, next(unique_prefix_iter)
+            )
+            self.total_retries += retries
+            self.total_generations += 1
+
+            retry_ratio = self.total_retries / self.total_generations
+            if self.total_retries > 20:
+                if retry_ratio > 0.25:
+                    self.total_retries = 0
+                    self.total_generations = 0
+                    self.initial_prompt_multiplier = self.initial_prompt_multiplier + 1
+                elif retry_ratio < 0.025:
+                    self.total_retries = 0
+                    self.total_generations = 0
+                    self.initial_prompt_multiplier = self.initial_prompt_multiplier - 1
+
+            prompt_text = self.processor.decode(prefix_tokens + prompt_token_ids)
+            yield {
+                "prompt": prompt_text,
+                "prompt_tokens_count": self.config.prefix_tokens + prompt_tokens,
+                "output_tokens_count": output_tokens,
+            }
+
+    def _create_prompt(
+        self, prompt_tokens: int, start_index: int, unique_prefix: Optional[int] = None
+    ) -> tuple[list[int], int]:
+        if prompt_tokens <= 0:
+            return [], 0
+        start_tokens = [unique_prefix] if unique_prefix else []
+
+        initial_word_count = prompt_tokens * self.initial_prompt_multiplier
+
+        test_tokens = []
+        retries = -1
+        while len(test_tokens) + len(start_tokens) < prompt_tokens:
+            retries += 1
+            test_prompt = self.text_creator.create_text(start_index, initial_word_count)
+            test_tokens = self.processor.encode(test_prompt)
+            initial_word_count = initial_word_count + prompt_tokens
+
+        prompt_tokens_ids = test_tokens[: prompt_tokens - len(start_tokens)]
+        candidate_text = self.processor.decode(
+            prompt_tokens_ids, skip_special_tokens=True
+        )
+        left_bound, right_bound = self.text_creator.get_word_bounds(
+            start_index, initial_word_count, len(candidate_text)
+        )
+        if left_bound == len(candidate_text):
+            final_text = test_prompt[:left_bound]
+        else:
+            final_text = test_prompt[:right_bound]
+        return start_tokens + self.processor.encode(final_text), retries
+
+
 class SyntheticDatasetCreator(DatasetCreator):
     @classmethod
     def is_supported(
@@ -252,6 +374,9 @@ class SyntheticDatasetCreator(DatasetCreator):
         processor: Optional[Union[str, Path, PreTrainedTokenizerBase]],
         processor_args: Optional[dict[str, Any]],
         random_seed: int,
+        generator_class: Optional[
+            type[SyntheticTextItemsGenerator]
+        ] = SyntheticTextItemsGenerator,
     ) -> Union[Dataset, DatasetDict, IterableDataset, IterableDatasetDict]:
         processor = check_load_processor(
             processor,
@@ -262,7 +387,7 @@ class SyntheticDatasetCreator(DatasetCreator):
         )
 
         config = SyntheticDatasetConfig.parse_str(data)
-        generator = SyntheticTextItemsGenerator(config, processor, random_seed)
+        generator = generator_class(config, processor, random_seed)
         items = list(generator)
 
         return Dataset.from_list(items, **(data_args or {}))
