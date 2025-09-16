@@ -22,7 +22,7 @@ __all__ = [
     "SyntheticDatasetConfig",
     "SyntheticDatasetCreator",
     "SyntheticTextItemsGenerator",
-    "SyntheticTextItemsGenerator2",
+    "SyntheticTextItemsGeneratorSlow",
 ]
 
 
@@ -125,7 +125,7 @@ class SyntheticDatasetConfig(BaseModel):
         return SyntheticDatasetConfig(**config_dict)
 
 
-class SyntheticTextItemsGenerator(
+class SyntheticTextItemsGeneratorSlow(
     Iterable[
         dict[
             Literal["prompt", "prompt_tokens_count", "output_tokens_count"],
@@ -220,7 +220,7 @@ class SyntheticTextItemsGenerator(
         return start_tokens + self.processor.encode(final_text)
 
 
-class SyntheticTextItemsGenerator2(
+class SyntheticTextItemsGenerator(
     Iterable[
         dict[
             Literal["prompt", "prompt_tokens_count", "output_tokens_count"],

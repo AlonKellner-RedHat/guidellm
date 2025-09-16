@@ -1,5 +1,5 @@
 """
-Integration performance test for SyntheticTextItemsGenerator vs SyntheticTextItemsGenerator2.
+Integration performance test for SyntheticTextItemsGeneratorSlow vs SyntheticTextItemsGenerator.
 
 This test compares the performance of two different synthetic text generators
 across different prompt sizes and tokenizers.
@@ -13,7 +13,7 @@ from transformers import AutoTokenizer
 from guidellm.dataset.synthetic import (
     SyntheticDatasetConfig,
     SyntheticTextItemsGenerator,
-    SyntheticTextItemsGenerator2,
+    SyntheticTextItemsGeneratorSlow,
 )
 
 
@@ -93,7 +93,7 @@ class TestSyntheticGeneratorPerformance:
     @pytest.mark.regression
     def test_generator_performance_comparison(self, tokenizer, prompt_config):
         """
-        Compare performance between SyntheticTextItemsGenerator and SyntheticTextItemsGenerator2.
+        Compare performance between SyntheticTextItemsGeneratorSlow and SyntheticTextItemsGenerator.
 
         This test ensures both generators:
         1. Produce the same number of items
@@ -102,14 +102,14 @@ class TestSyntheticGeneratorPerformance:
         """
         size_name, config = prompt_config
 
-        # Test SyntheticTextItemsGenerator (original)
+        # Test SyntheticTextItemsGeneratorSlow (original)
         time1, items1 = self._measure_generation_time(
-            SyntheticTextItemsGenerator, config, tokenizer
+            SyntheticTextItemsGeneratorSlow, config, tokenizer
         )
 
-        # Test SyntheticTextItemsGenerator2 (new implementation)
+        # Test SyntheticTextItemsGenerator (new implementation)
         time2, items2 = self._measure_generation_time(
-            SyntheticTextItemsGenerator2, config, tokenizer
+            SyntheticTextItemsGenerator, config, tokenizer
         )
 
         # Validate both generators produce correct output
@@ -121,23 +121,23 @@ class TestSyntheticGeneratorPerformance:
 
         # Report performance differences
         if performance_ratio > 1:
-            faster_generator = "SyntheticTextItemsGenerator2"
+            faster_generator = "SyntheticTextItemsGenerator"
             speedup = performance_ratio
             slower_time, faster_time = time1, time2
         else:
-            faster_generator = "SyntheticTextItemsGenerator"
+            faster_generator = "SyntheticTextItemsGeneratorSlow"
             speedup = 1 / performance_ratio
             slower_time, faster_time = time2, time1
 
         print(f"\n=== Performance Results for {size_name} prompts ===")
-        print(f"SyntheticTextItemsGenerator: {time1:.4f}s")
-        print(f"SyntheticTextItemsGenerator2: {time2:.4f}s")
+        print(f"SyntheticTextItemsGeneratorSlow: {time1:.4f}s")
+        print(f"SyntheticTextItemsGenerator: {time2:.4f}s")
         print(f"{faster_generator} is {speedup:.2f}x faster")
         print(f"Time difference: {abs(slower_time - faster_time):.4f}s")
 
         # Assertions
-        assert time1 > 0, "SyntheticTextItemsGenerator should take measurable time"
-        assert time2 > 0, "SyntheticTextItemsGenerator2 should take measurable time"
+        assert time1 > 0, "SyntheticTextItemsGeneratorSlow should take measurable time"
+        assert time2 > 0, "SyntheticTextItemsGenerator should take measurable time"
         same_count_msg = "Both generators should produce same number of items"
         assert len(items1) == len(items2), same_count_msg
 
@@ -167,10 +167,10 @@ class TestSyntheticGeneratorPerformance:
         random_seed = 123
 
         # Generate items with both generators using the same seed
-        gen1 = SyntheticTextItemsGenerator(config, tokenizer, random_seed)
+        gen1 = SyntheticTextItemsGeneratorSlow(config, tokenizer, random_seed)
         items1 = list(gen1)
 
-        gen2 = SyntheticTextItemsGenerator2(config, tokenizer, random_seed)
+        gen2 = SyntheticTextItemsGenerator(config, tokenizer, random_seed)
         items2 = list(gen2)
 
         # Both should generate the same number of items
@@ -202,7 +202,7 @@ class TestSyntheticGeneratorPerformance:
         """
         Test that both generators produce exactly identical results with precise token counts.
 
-        This test ensures that SyntheticTextItemsGenerator and SyntheticTextItemsGenerator2
+        This test ensures that SyntheticTextItemsGeneratorSlow and SyntheticTextItemsGenerator
         produce identical outputs with exact token counts when given the same parameters.
         """
         config = SyntheticDatasetConfig(
@@ -216,8 +216,8 @@ class TestSyntheticGeneratorPerformance:
         random_seed = 42
 
         # Create instances of both generators
-        gen1 = SyntheticTextItemsGenerator(config, tokenizer, random_seed)
-        gen2 = SyntheticTextItemsGenerator2(config, tokenizer, random_seed)
+        gen1 = SyntheticTextItemsGeneratorSlow(config, tokenizer, random_seed)
+        gen2 = SyntheticTextItemsGenerator(config, tokenizer, random_seed)
 
         # Test multiple scenarios with different parameters
         test_scenarios = [
@@ -313,10 +313,10 @@ class TestSyntheticGeneratorPerformance:
         random_seed = 12345
 
         # Generate full datasets with both generators
-        gen1 = SyntheticTextItemsGenerator(config, tokenizer, random_seed)
+        gen1 = SyntheticTextItemsGeneratorSlow(config, tokenizer, random_seed)
         items1 = list(gen1)
 
-        gen2 = SyntheticTextItemsGenerator2(config, tokenizer, random_seed)
+        gen2 = SyntheticTextItemsGenerator(config, tokenizer, random_seed)
         items2 = list(gen2)
 
         # Assert same number of items
@@ -384,10 +384,10 @@ class TestSyntheticGeneratorPerformance:
 
                 # Measure both generators
                 time1, _ = self._measure_generation_time(
-                    SyntheticTextItemsGenerator, config, tokenizer
+                    SyntheticTextItemsGeneratorSlow, config, tokenizer
                 )
                 time2, _ = self._measure_generation_time(
-                    SyntheticTextItemsGenerator2, config, tokenizer
+                    SyntheticTextItemsGenerator, config, tokenizer
                 )
 
                 results.append(
@@ -433,10 +433,10 @@ class TestSyntheticGeneratorPerformance:
             print(f"Average performance ratio (Gen1/Gen2): {avg_ratio:.2f}x")
 
             if avg_ratio > 1:
-                msg = f"Overall: SyntheticTextItemsGenerator2 is {avg_ratio:.2f}x faster on average"
+                msg = f"Overall: SyntheticTextItemsGenerator is {avg_ratio:.2f}x faster on average"
                 print(msg)
             else:
-                msg = f"Overall: SyntheticTextItemsGenerator is {1 / avg_ratio:.2f}x faster on average"
+                msg = f"Overall: SyntheticTextItemsGeneratorSlow is {1 / avg_ratio:.2f}x faster on average"
                 print(msg)
 
             print("=" * 80 + "\n")
