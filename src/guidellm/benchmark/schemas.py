@@ -23,7 +23,15 @@ from pathlib import Path
 from typing import Any, ClassVar, Literal, TypeVar, cast
 
 import yaml
-from pydantic import ConfigDict, Field, computed_field, model_serializer
+from pydantic import (
+    ConfigDict,
+    Field,
+    ValidationError,
+    ValidatorFunctionWrapHandler,
+    computed_field,
+    field_validator,
+    model_serializer,
+)
 from torch.utils.data import Sampler
 from transformers import PreTrainedTokenizerBase
 
@@ -1670,7 +1678,7 @@ class GenerativeBenchmark(Benchmark, StandardBaseDict):
         estimated_state: EstimatedBenchmarkState,
         scheduler_state: SchedulerState,
         profile: Profile,
-        requests: Iterable,
+        requests: Iterable,  # noqa: ARG003
         backend: BackendInterface,
         environment: Environment,
         strategy: SchedulingStrategy,
@@ -1837,7 +1845,7 @@ class BenchmarkGenerativeTextArgs(StandardBaseModel):
     profile: StrategyType | ProfileType | Profile = Field(
         default="sweep", description="Benchmark profile or scheduling strategy type"
     )
-    rate: float | list[float] | None = Field(
+    rate: list[float] | None = Field(
         default=None, description="Request rate(s) for rate-based scheduling"
     )
     # Backend configuration
@@ -1933,6 +1941,26 @@ class BenchmarkGenerativeTextArgs(StandardBaseModel):
         default=None,
         description="Whether to stop the benchmark if the model is over-saturated",
     )
+
+    @field_validator("data", "data_args", "rate", mode="wrap")
+    @classmethod
+    def single_to_list(
+        cls, value: Any, handler: ValidatorFunctionWrapHandler
+    ) -> list[Any]:
+        """
+        Ensures field is always a list.
+
+        :param value: Input value for the 'data' field
+        :return: List of data sources
+        """
+        try:
+            return handler(value)
+        except ValidationError as err:
+            # If validation fails, try wrapping the value in a list
+            if err.errors()[0]["type"] == "list_type":
+                return handler([value])
+            else:
+                raise
 
     @model_serializer
     def serialize_model(self):
